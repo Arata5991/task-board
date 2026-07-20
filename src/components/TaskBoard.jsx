@@ -1,18 +1,37 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TaskItem from './TaskItem'
 
-let nextId = 1
+const STORAGE_KEY = 'task-board.tasks'
+
+function loadTasks() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
 
 function TaskBoard() {
-  const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState(loadTasks)
   const [inputValue, setInputValue] = useState('')
+  const nextId = useRef(
+    tasks.reduce((max, task) => Math.max(max, task.id), 0) + 1
+  )
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+  }, [tasks])
 
   const handleAddTask = (event) => {
     event.preventDefault()
     const text = inputValue.trim()
     if (!text) return
 
-    setTasks((prev) => [...prev, { id: nextId++, text, completed: false }])
+    setTasks((prev) => [
+      ...prev,
+      { id: nextId.current++, text, completed: false },
+    ])
     setInputValue('')
   }
 
